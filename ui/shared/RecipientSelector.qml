@@ -18,7 +18,20 @@ Item {
     height: (readOnly ? inpReadOnly.height : inpAddress.height) + txtLabel.height
     //% "Invalid ethereum address"
     readonly property string addressValidationError: qsTrId("invalid-ethereum-address")
+    property bool isValid: false
+    property var reset: function() {}
 
+    function resetInternal() {
+        inpAddress.resetInternal()
+        selContact.resetInternal()
+        selAccount.resetInternal()
+        selAddressSource.resetInternal()
+        selContact.reset()
+        selAccount.reset()
+        selAddressSource.reset()
+        isValid = false
+    }
+    
     enum Type {
         Address,
         Contact,
@@ -37,13 +50,14 @@ Item {
         } else if (selAddressSource.selectedSource === "Contact") {
             isValid = selContact.validate()
         }
+        root.isValid = isValid
         return isValid
     }
 
     Text {
         id: txtLabel
         visible: label !== ""
-        //% "Recipient"
+	//% "Recipient"
         text: qsTrId("recipient")
         font.pixelSize: 13
         font.family: Style.current.fontRegular.name
@@ -79,7 +93,7 @@ Item {
             Layout.fillWidth: true
             anchors.left: undefined
             anchors.right: undefined
-            //% "No recipient selected"
+	    //% "No recipient selected"
             text: (root.selectedRecipient && root.selectedRecipient.name) ? root.selectedRecipient.name : qsTrId("no-recipient-selected")
             textField.leftPadding: 14
             textField.topPadding: 18
@@ -108,6 +122,11 @@ Item {
                 }
                 root.selectedRecipient = { address: selectedAddress, type: RecipientSelector.Type.Address }
             }
+            onIsValidChanged: {
+                if (selAddressSource.selectedSource === "Address") {
+                    root.isValid = isValid
+                }
+            }
         }
 
         ContactSelector {
@@ -119,6 +138,9 @@ Item {
             Layout.preferredWidth: selAddressSource.visible ? root.inputWidth : parent.width
             Layout.alignment: Qt.AlignTop
             Layout.fillWidth: true
+            reset: function() {
+                contacts = root.contacts
+            }
             onSelectedContactChanged: {
                 if (root.readOnly) {
                     return
@@ -126,6 +148,11 @@ Item {
                 if(selectedContact && selectedContact.address) {
                     const { address, name, alias, isContact, identicon, ensVerified } = selectedContact
                     root.selectedRecipient = { address, name, alias, isContact, identicon, ensVerified, type: RecipientSelector.Type.Contact }
+                }
+            }
+            onIsValidChanged: {
+                if (selAddressSource.selectedSource === "Contact") {
+                    root.isValid = isValid
                 }
             }
         }
@@ -140,8 +167,11 @@ Item {
             Layout.preferredWidth: selAddressSource.visible ? root.inputWidth : parent.width
             Layout.alignment: Qt.AlignTop
             Layout.fillWidth: true
+            reset: function() {
+                accounts = root.accounts
+            }
             onSelectedAccountChanged: {
-                if (root.readOnly) {
+                if (root.readOnly || !selectedAccount) {
                     return
                 }
                 const { address, name, iconColor, assets, fiatBalance } = selectedAccount
@@ -155,7 +185,9 @@ Item {
             width: sourceSelectWidth
             Layout.preferredWidth: root.sourceSelectWidth
             Layout.alignment: Qt.AlignTop
-
+            reset: function() {
+                sources = ["Address", "Contact", "My account"]
+            }
             onSelectedSourceChanged: {
                 if (root.readOnly) {
                     return
@@ -167,6 +199,7 @@ Item {
                         selContact.visible = selAccount.visible = false
                         root.height = Qt.binding(function() { return inpAddress.height + txtLabel.height })
                         root.selectedRecipient = { address: inpAddress.selectedAddress, type: RecipientSelector.Type.Address }
+                        root.isValid = inpAddress.isValid
                         break;
                     case "Contact":
                         selContact.visible = true
@@ -176,6 +209,7 @@ Item {
                         address = selContact.selectedContact.address
                         name = selContact.selectedContact.name
                         root.selectedRecipient = { address, name, alias, isContact, identicon, ensVerified, type: RecipientSelector.Type.Contact }
+                        root.isValid = selContact.isValid
                         break;
                     case "My account":
                         selAccount.visible = true
@@ -185,6 +219,7 @@ Item {
                         address = selAccount.selectedAccount.address
                         name = selAccount.selectedAccount.name
                         root.selectedRecipient = { address, name, iconColor, assets, fiatBalance, type: RecipientSelector.Type.Account }
+                        root.isValid = selAccount.isValid
                         break;
                 }
             }

@@ -344,6 +344,7 @@ DISTFILES += \
     shared/SearchBox.qml \
     shared/Select.qml \
     shared/Separator.qml \
+    shared/SeparatorWithIcon.qml \
     shared/SplitViewHandle.qml \
     shared/StatusTabButton.qml \
     shared/StyledButton.qml \
@@ -355,6 +356,8 @@ DISTFILES += \
     shared/SVGImage.qml \
     shared/TextWithLabel.qml \
     shared/TransactionPreview.qml \
+    shared/TransactionStackGroup.qml \
+    shared/TransactionStackView.qml \
     shared/img/check.svg \
     shared/img/close.svg \
     shared/img/loading.png \

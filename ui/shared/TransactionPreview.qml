@@ -6,13 +6,22 @@ import "../imports"
 
 Item {
     id: root
-    property var fromAccount: ({})
-    property var toAccount: ({ type: "" })
-    property var asset: ({ name: "", symbol: "" })
-    property var amount: ({ value: "", fiatValue: "", currency: "" })
+    property var fromAccount
+    property var toAccount
+    property var asset
+    property var amount
     property string currency: "USD"
-    property var gas: ({ value: "", symbol: "", fiatValue: "" })
+    property var gas
     height: content.height
+    property var reset: function() {}
+
+    function resetInternal() {
+        fromAccount = undefined
+        toAccount = undefined
+        asset = undefined
+        amount = undefined
+        gas = undefined
+    }
     
     Column {
         id: content
@@ -30,7 +39,7 @@ Item {
                 StyledText {
                     font.pixelSize: 15
                     height: 22
-                    text: root.fromAccount.name
+                    text: root.fromAccount ? root.fromAccount.name : ""
                     elide: Text.ElideRight
                     anchors.left: parent.left
                     anchors.right: imgFromWallet.left
@@ -52,7 +61,7 @@ Item {
                 ColorOverlay {
                     anchors.fill: imgFromWallet
                     source: imgFromWallet
-                    color: fromAccount.iconColor
+                    color: root.fromAccount ? root.fromAccount.iconColor : Style.current.blue
                 }
             }
         }
@@ -64,10 +73,10 @@ Item {
             states: [
                 State {
                     name: "Address"
-                    when: root.toAccount.type === RecipientSelector.Type.Address
+                    when: !!root.toAccount && root.toAccount.type === RecipientSelector.Type.Address
                     PropertyChanges {
                         target: txtToPrimary
-                        text: root.toAccount.address
+                        text: root.toAccount ? root.toAccount.address : ""
                         elide: Text.ElideMiddle
                         anchors.leftMargin: 190
                     }
@@ -78,7 +87,7 @@ Item {
                 },
                 State {
                     name: "Contact"
-                    when: root.toAccount.type === RecipientSelector.Type.Contact && !!root.toAccount.address
+                    when: !!root.toAccount && root.toAccount.type === RecipientSelector.Type.Contact && !!root.toAccount.address
                     PropertyChanges {
                         target: metSecondary
                         text: root.toAccount.ensVerified ? root.toAccount.alias : root.toAccount.address
@@ -101,7 +110,7 @@ Item {
                 },
                 State {
                     name: "Account"
-                    when: root.toAccount.type === RecipientSelector.Type.Account && !!root.toAccount.address
+                    when: !!root.toAccount && root.toAccount.type === RecipientSelector.Type.Account && !!root.toAccount.address
                     PropertyChanges {
                         target: metSecondary
                         text: root.toAccount.address
@@ -259,7 +268,7 @@ Item {
                 StyledText {
                     font.pixelSize: 15
                     height: 22
-                    text: root.amount.value ? Utils.stripTrailingZeros(root.amount.value) : ""
+                    text: (root.amount && root.amount.value) ? Utils.stripTrailingZeros(root.amount.value) : ""
                     anchors.left: parent.left
                     anchors.right: txtAmountSymbol.left
                     anchors.rightMargin: 5
@@ -284,7 +293,7 @@ Item {
                     id: txtAmountFiat
                     font.pixelSize: 15
                     height: 22
-                    text: "~" + (root.amount.fiatValue ? root.amount.fiatValue : "0.00")
+                    text: "~" + (root.amount && root.amount.fiatValue ? root.amount.fiatValue : "0.00")
                     anchors.right: txtAmountCurrency.left
                     anchors.rightMargin: 5
                     anchors.verticalCenter: parent.verticalCenter
